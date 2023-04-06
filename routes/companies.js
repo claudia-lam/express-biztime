@@ -1,3 +1,5 @@
+'use strict';
+
 const express = require("express");
 
 const db = require("../db");
@@ -32,10 +34,12 @@ router.get("/:code", async function(req, res, next) {
   const result = await db.query(
     `SELECT code, name, description
         FROM companies
-        WHERE code = $1`, [companyCode]);
+        WHERE code = $1`, [companyCode],
+    );
+
   const company = result.rows[0];
 
-  if (result.rows.length === 0) throw new NotFoundError;
+  if (!company) throw new NotFoundError;
 
   return res.json({company});
 });
@@ -55,7 +59,7 @@ router.post("", async function(req, res, next) {
     `INSERT INTO companies (code, name, description)
         VALUES ($1, $2, $3)
         RETURNING code, name, description`,
-    [code, name, description],    // TODO: ask about comma at end
+    [code, name, description],
   );
 
   const company = results.rows[0];
