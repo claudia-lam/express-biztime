@@ -31,15 +31,30 @@ router.get("", async function(req, res, next) {
 router.get("/:code", async function(req, res, next) {
   const companyCode = req.params.code;
 
-  const result = await db.query(
+  const companyResult = await db.query(
     `SELECT code, name, description
         FROM companies
         WHERE code = $1`, [companyCode],
     );
 
-  const company = result.rows[0];
+  const company = companyResult.rows[0];
+
+  const invoicesResult = await db.query(
+    `SELECT id
+        FROM invoices AS i
+        JOIN companies AS c
+          ON i.comp_code = c.code
+        WHERE c.code = $1`,
+        [companyCode],
+  );
+
+  let invoices = invoicesResult.rows;
+
+  invoices = invoices.map(invoice => invoice.id);
 
   if (!company) throw new NotFoundError;
+
+  company.invoices = invoices;
 
   return res.json({company});
 });

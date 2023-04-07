@@ -15,36 +15,22 @@ router.get("", async function(req, res, next) {
     `SELECT id, comp_code
      FROM   invoices;
     `
-  )
-  console.log("result-invoices", result);
+  );
 
   const invoices = result.rows
-  return res.json({invoices});
 
+  return res.json({invoices});
 });
 
 
 /** GET - Returns obj on given invoice
  *
- * {
-	"invoice": {
-		"id": 1,
-		"amt": "100.00",
-		"paid": false,
-		"add_date": "2023-04-06T07:00:00.000Z",
-		"paid_date": null,
-		"company": {
-			"code": "apple",
-			"name": "Apple Computer",
-			"description": "Maker of OSX."
-		}
-	}
-}
+ * >> {invoice: {id, amt, paid, add_date, paid_date, company:
+ *    {code, name, description}}}
  *
  */
 router.get("/:id", async function(req, res, next) {
   const id = req.params.id;
-  // console.log("IDDDDDDD", id);
 
   const invoiceResults = await db.query(
     `
@@ -53,8 +39,8 @@ router.get("/:id", async function(req, res, next) {
     WHERE  id = $1;
     `,
     [id],
-  )
-  console.log("invoiceResults", invoiceResults);
+  );
+
   const invoice = invoiceResults.rows[0];
 
   const companyResults = await db.query(
@@ -66,8 +52,8 @@ router.get("/:id", async function(req, res, next) {
     WHERE  id = $1;
     `,
     [id],
-  )
-  console.log("companyResults", companyResults);
+  );
+
   const company = companyResults.rows[0];
 
   if (!invoiceResults) throw new NotFoundError;
@@ -75,7 +61,6 @@ router.get("/:id", async function(req, res, next) {
   invoice.company = company;
 
   return res.json({invoice});
-
 });
 
 
@@ -136,7 +121,7 @@ router.put('/:id', async function(req, res, next) {
 
 router.delete('/:id', async function(req, res, next) {
   const id = req.params.id;
-  console.log("id-delete", id);
+
   const result = await db.query(
     `
     DELETE FROM invoices
