@@ -10,16 +10,16 @@ const { NotFoundError, BadRequestError } = require("../expressError");
  *
  * >> {invoices: [{id, comp_code}, ...]}
  */
-router.get("", async function(req, res, next) {
+router.get("", async function (req, res, next) {   //TODO: optional: order by query
   const result = await db.query(
     `SELECT id, comp_code
      FROM   invoices;
     `
   );
 
-  const invoices = result.rows
+  const invoices = result.rows;
 
-  return res.json({invoices});
+  return res.json({ invoices });
 });
 
 
@@ -29,7 +29,7 @@ router.get("", async function(req, res, next) {
  *    {code, name, description}}}
  *
  */
-router.get("/:id", async function(req, res, next) {
+router.get("/:id", async function (req, res, next) {
   const id = req.params.id;
 
   const invoiceResults = await db.query(
@@ -42,6 +42,8 @@ router.get("/:id", async function(req, res, next) {
   );
 
   const invoice = invoiceResults.rows[0];
+
+  if (!invoiceResults) throw new NotFoundError();
 
   const companyResults = await db.query(
     `
@@ -56,21 +58,20 @@ router.get("/:id", async function(req, res, next) {
 
   const company = companyResults.rows[0];
 
-  if (!invoiceResults) throw new NotFoundError;
 
   invoice.company = company;
 
-  return res.json({invoice});
+  return res.json({ invoice });
 });
 
 
 /**
  *  POST - create a new invoice
- *
+ * TODO: always add example inputs
  *  >> {invoice: {id, comp_code, amt, paid, add_date, paid_date}}
  */
-router.post('', async function(req, res, next) {
-  if (!req.body) throw new BadRequestError();
+router.post('', async function (req, res, next) {
+  if (!req.body) throw new BadRequestError();       //TODO: empty object when nothing is passed in (truthy value)
 
   const { comp_code, amt } = req.body;
 
@@ -83,17 +84,17 @@ router.post('', async function(req, res, next) {
 
   const invoice = results.rows[0];
 
-  return res.status(201).json({invoice});
+  return res.status(201).json({ invoice });
 });
 
 
 /**
  * PUT - updates a invoice
- *
+ *  //TODO: add input example
  * >> {invoice: {id, comp_code, amt, paid, add_date, paid_date}}
  */
-router.put('/:id', async function(req, res, next) {
-  if (!req.body) throw new BadRequestError();
+router.put('/:id', async function (req, res, next) {
+  if (!req.body) throw new BadRequestError();    //TODO: more specific if condition with empty object(truthy value)
 
   const { amt } = req.body;
 
@@ -102,14 +103,14 @@ router.put('/:id', async function(req, res, next) {
       SET amt=$1
       WHERE id = $2
       RETURNING id, comp_code, amt, paid, add_date, paid_date`,
-      [amt, req.params.id],
+    [amt, req.params.id],
   );
 
   const invoice = result.rows[0];
 
   if (!invoice) throw new NotFoundError();
 
-  return res.json({invoice});
+  return res.json({ invoice });
 });
 
 
@@ -119,7 +120,7 @@ router.put('/:id', async function(req, res, next) {
  * >> {status: "deleted"}
  */
 
-router.delete('/:id', async function(req, res, next) {
+router.delete('/:id', async function (req, res, next) {
   const id = req.params.id;
 
   const result = await db.query(
@@ -132,7 +133,7 @@ router.delete('/:id', async function(req, res, next) {
 
   if (!result) throw new NotFoundError();
 
-  return res.json({status: "deleted"});
+  return res.json({ status: "deleted" });
 });
 
 

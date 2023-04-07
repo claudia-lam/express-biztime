@@ -11,7 +11,7 @@ const { NotFoundError, BadRequestError } = require("../expressError");
  *
  *  >> {companies: [{code, name}, ...]}
  */
-router.get("", async function(req, res, next) {
+router.get("", async function (req, res, next) {
 
   const result = await db.query(
     `SELECT code, name
@@ -20,43 +20,43 @@ router.get("", async function(req, res, next) {
 
   const companies = result.rows;
 
-  return res.json({companies});
+  return res.json({ companies });
 });
 
 
-/** GET - returns a single company
+/** GET - returns a single company    //TODO: update doc str to include invoices
  *
  * >> {company: {code, name, description}}
 */
-router.get("/:code", async function(req, res, next) {
+router.get("/:code", async function (req, res, next) {
   const companyCode = req.params.code;
 
   const companyResult = await db.query(
     `SELECT code, name, description
         FROM companies
         WHERE code = $1`, [companyCode],
-    );
+  );
 
   const company = companyResult.rows[0];
 
-  const invoicesResult = await db.query(
+  const invoicesResult = await db.query(    //TODO: join is not necessary
     `SELECT id
         FROM invoices AS i
         JOIN companies AS c
           ON i.comp_code = c.code
         WHERE c.code = $1`,
-        [companyCode],
+    [companyCode],
   );
 
   let invoices = invoicesResult.rows;
 
   invoices = invoices.map(invoice => invoice.id);
 
-  if (!company) throw new NotFoundError;
+  if (!company) throw new NotFoundError();
 
   company.invoices = invoices;
 
-  return res.json({company});
+  return res.json({ company });
 });
 
 
@@ -65,7 +65,7 @@ router.get("/:code", async function(req, res, next) {
  * req: {code, name, description}
  * >> {company: {code, name, description}}
 */
-router.post("", async function(req, res, next) {
+router.post("", async function (req, res, next) {
   if (!req.body) throw new BadRequestError();
 
   const { code, name, description } = req.body;
@@ -79,7 +79,7 @@ router.post("", async function(req, res, next) {
 
   const company = results.rows[0];
 
-  return res.status(201).json({company});
+  return res.status(201).json({ company });
 });
 
 
@@ -88,7 +88,7 @@ router.post("", async function(req, res, next) {
  * req: {name, description}
  * >> {company: {code, name, description}}
  */
-router.put('/:code', async function(req, res, next) {
+router.put('/:code', async function (req, res, next) {
   if (!req.body) throw new BadRequestError();
 
   const { name, description } = req.body;
@@ -99,14 +99,14 @@ router.put('/:code', async function(req, res, next) {
             description=$2
         WHERE code = $3
         RETURNING code, name, description`,
-        [name, description, req.params.code],
+    [name, description, req.params.code],
   );
 
   const company = result.rows[0];
 
   if (!company) throw new NotFoundError();
 
-  return res.json({company});
+  return res.json({ company });
 });
 
 
@@ -114,7 +114,7 @@ router.put('/:code', async function(req, res, next) {
  *
  * >> {status: "deleted"}
  */
-router.delete('/:code', async function(req, res, next) {
+router.delete('/:code', async function (req, res, next) {
   const result = await db.query(
     `DELETE FROM companies
         WHERE code = $1
